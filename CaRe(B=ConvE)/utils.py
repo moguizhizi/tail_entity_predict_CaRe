@@ -1,5 +1,6 @@
 import math
 import warnings
+import pickle
 
 import numpy as np
 import torch
@@ -75,7 +76,7 @@ def get_rank(scores, clust, Hits, pos_ids):
     return rank, hits
 
 
-def evaluate(model, entTotal, test_trips, args, entity_embedding, label_graph, edge_index, edge_type, edge_norm):
+def evaluate(model, test_trips, args, entity_embedding, label_graph, edge_index, edge_type, edge_norm):
     H_Rank = []
     H_inv_Rank = []
     H_Hits = np.zeros((len(args.Hits)))
@@ -87,7 +88,7 @@ def evaluate(model, entTotal, test_trips, args, entity_embedding, label_graph, e
     tail = test_trips[:, 2]
     bs = args.batch_size
 
-    test_scores = np.zeros((test_trips.shape[0], entTotal))
+    test_scores = np.zeros((test_trips.shape[0], args.ent_total))
     n_batches = int(test_trips.shape[0] / bs) + 1
 
     for i in range(n_batches):
@@ -161,3 +162,109 @@ def edge_normalization(edge_type, edge_index, num_entity, num_relation):
     edge_norm = 1 / deg[edge_index[1]].view(-1)[index]
 
     return edge_norm
+
+
+def get_list_from_file(_file, is_contain_last=True):
+    fin = open(_file, "r", encoding="utf8").readlines()
+    if is_contain_last != True:
+        records = fin[0:-1]
+    else:
+        records = fin[0:]
+
+    conttent_list = []
+    for trip in records:
+        record = trip.strip().split()
+        conttent_list.append(record[0])
+
+    return conttent_list
+
+
+def get_dict_from_file(file, is_contain_last=True):
+    fin = open(file, "r", encoding="utf8").readlines()
+    if is_contain_last != True:
+        records = fin[0:-1]
+    else:
+        records = fin[0:]
+
+    content_dict = {}
+    content_inv_dict = {}
+    for trip in records:
+        record = trip.strip().split()
+        content_dict[record[0]] = record[1]
+        content_inv_dict[record[1]] = record[0]
+
+    return content_dict, content_inv_dict
+
+def get_entity_len_and_num(args):
+    fin = open(args.data_files['ent2id_path'], 'r', encoding="utf8").readlines()
+    for trip in fin[0:]:
+        record = trip.strip().split()
+
+    return int(record[1]), int(record[0])
+
+
+def get_rel_len_and_num(args):
+    fin = open(args.data_files['rel2id_path'], 'r', encoding="utf8").readlines()
+    for trip in fin[0:]:
+        record = trip.strip().split()
+
+    return int(record[1]), int(record[0])
+
+
+def get_glove_entity_dim(args):
+    glove_embedding = pickle.load(open(args.data_files['glove_embedding_path'], 'rb'))
+    dim = glove_embedding[0].shape[1]
+
+    return int(dim)
+
+
+def get_elmo_entity_dim(args):
+    elmo_embedding = pickle.load(open(args.data_files['elmo_embedding_path'], 'rb'))
+
+    temp = np.mean(elmo_embedding[0], 1)
+
+    dim = temp.shape[1]
+
+    return int(dim)
+
+
+def pad_elmo_all_entity_embedding(args):
+    elmo_embedding = pickle.load(open(args.data_files['elmo_embedding_path'], 'rb'))
+    pad_all_entity = []
+    for _, entity_embedding in enumerate(elmo_embedding):
+        temp = np.mean(entity_embedding, 1)
+        size = len(temp)
+        pad_glove_entity = np.pad(temp, ((0, args.max_entity_length - size), (0, 0)), mode='constant')
+        pad_all_entity.append(pad_glove_entity)
+
+    return pad_all_entity
+
+
+def pad_glove_all_entity_embedding(args):
+    glove_embedding = pickle.load(open(args.data_files['glove_embedding_path'], 'rb'))
+    pad_all_entity = []
+    for _, entity_embedding in enumerate(glove_embedding):
+        size = len(entity_embedding)
+        pad_glove_entity = np.pad(entity_embedding, ((0, args.max_entity_length - size), (0, 0)), mode='constant')
+        pad_all_entity.append(pad_glove_entity)
+
+    return pad_all_entity
+
+def str_to_int_from_dict(trans_dict, is_key_trans = True, is_value_trans = True):
+    temp_dict = {}
+    for key, value in trans_dict.items():
+        temp_key = key
+        temp_value = value
+        if is_key_trans == True:
+            temp_key = int(key)
+        if is_value_trans == True:
+            temp_value = int(value)
+
+        temp_dict[temp_key] = temp_value
+
+    return temp_dict
+
+
+
+
+

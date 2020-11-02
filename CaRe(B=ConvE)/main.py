@@ -1,10 +1,9 @@
 #### Import all the supporting classes
 
-import argparse
 import os
-import pickle
 import time
 
+from args import init_args
 from model import ConvEParam
 from utils import *
 
@@ -18,141 +17,6 @@ torch.backends.cudnn.enabled = False
 from logger import config_logger
 
 logger = config_logger('Model')
-
-
-def get_glove_entity_dim(args):
-    glove_embedding = pickle.load(open(args.data_files['glove_embedding_path'], 'rb'))
-    dim = glove_embedding[0].shape[1]
-
-    return int(dim)
-
-
-def get_elmo_entity_dim(args):
-    elmo_embedding = pickle.load(open(args.data_files['elmo_embedding_path'], 'rb'))
-
-    temp = np.mean(elmo_embedding[0], 1)
-
-    dim = temp.shape[1]
-
-    return int(dim)
-
-
-def get_entity_len_and_num(args):
-    fin = open(args.data_files['ent2id_path'], 'r', encoding="utf8").readlines()
-    for trip in fin[0:]:
-        record = trip.strip().split()
-
-    return int(record[1]), int(record[0])
-
-
-def get_rel_len_and_num(args):
-    fin = open(args.data_files['rel2id_path'], 'r', encoding="utf8").readlines()
-    for trip in fin[0:]:
-        record = trip.strip().split()
-
-    return int(record[1]), int(record[0])
-
-
-def pad_glove_all_entity_embedding(args):
-    glove_embedding = pickle.load(open(args.data_files['glove_embedding_path'], 'rb'))
-    pad_all_entity = []
-    for _, entity_embedding in enumerate(glove_embedding):
-        size = len(entity_embedding)
-        pad_glove_entity = np.pad(entity_embedding, ((0, args.max_entity_length - size), (0, 0)), mode='constant')
-        pad_all_entity.append(pad_glove_entity)
-
-    return pad_all_entity
-
-
-def pad_elmo_all_entity_embedding(args):
-    elmo_embedding = pickle.load(open(args.data_files['elmo_embedding_path'], 'rb'))
-    pad_all_entity = []
-    for _, entity_embedding in enumerate(elmo_embedding):
-        temp = np.mean(entity_embedding, 1)
-        size = len(temp)
-        pad_glove_entity = np.pad(temp, ((0, args.max_entity_length - size), (0, 0)), mode='constant')
-        pad_all_entity.append(pad_glove_entity)
-
-    return pad_all_entity
-
-
-def init_args():
-    parser = argparse.ArgumentParser(description='CaRe: Canonicalization Infused Representations for Open KGs')
-
-    ### Model and Dataset choice
-    parser.add_argument('-CN', dest='CN', default='RGCN', choices=['Linear', 'GCN', 'LAN', 'RGCN'],
-                        help='Choice of Canonical Cluster Encoder Network')
-    parser.add_argument('-GcnNum', dest='GcnNum', default=1, type=int, choices=[1, 2],
-                        help='The number of Gcn Convolution')
-    parser.add_argument('-dataset', dest='dataset', default='Cockpit', choices=['Cockpit'],
-                        help='Dataset Choice')
-
-    ### Data Paths
-    parser.add_argument('-data_path', dest='data_path', default='../Data', help='Data folder')
-
-    #### Hyper-parameters
-    parser.add_argument('-num_layers', dest='num_layers', default=1, type=int, help='No. of layers in encoder network')
-    parser.add_argument('-bidirectional', dest='bidirectional', default=True, type=bool, help='type of encoder network')
-    parser.add_argument('-relPoolType', dest='relPoolType', default='last', choices=['last', 'max', 'mean'],
-                        help='pooling operation for encoder network')
-    parser.add_argument('-entPoolType', dest='entPoolType', default='mean', choices=['max', 'mean'],
-                        help='pooling operation for encoder network')
-    parser.add_argument('-dropout', dest='dropout', default=0.5, type=float, help='Dropout')
-    parser.add_argument('-lr', dest='lr', default=0.001, type=float, help='learning rate')
-    parser.add_argument('-batch_size', dest='batch_size', default=1024, type=int, help='batch size for training')
-    parser.add_argument('-n_epochs', dest='n_epochs', default=500, type=int, help='maximum no. of epochs')
-    parser.add_argument('-grad_norm', dest='grad_norm', default=1.0, type=float, help='gradient clipping')
-    parser.add_argument('-eval_epoch', dest='eval_epoch', default=5, type=int,
-                        help='Interval for evaluating on validation dataset')
-    parser.add_argument('-Hits', dest='Hits', default=[10, 30, 50], help='Choice of n in Hits@n')
-    parser.add_argument('-early_stop', dest='early_stop', default=10, type=int,
-                        help='Stopping training after validation performance stops improving')
-    parser.add_argument('--use_glove', type=bool, default=True, help='Using Glove embedding or Elmo')
-    parser.add_argument("--n_bases", type=int, default=4)
-
-    args = parser.parse_args()
-
-    args.data_files = {
-        'dataset_path': args.data_path + '/' + args.dataset + '/dataset.txt',
-        'origin_path': args.data_path + '/' + args.dataset + '/origin.txt',
-        'ent2id_path': args.data_path + '/' + args.dataset + '/ent2id.txt',
-        'rel2id_path': args.data_path + '/' + args.dataset + '/rel2id.txt',
-        'train_trip_path': args.data_path + '/' + args.dataset + '/train_trip.txt',
-        'test_trip_path': args.data_path + '/' + args.dataset + '/test_trip.txt',
-        'valid_trip_path': args.data_path + '/' + args.dataset + '/valid_trip.txt',
-        'origin_trip_path': args.data_path + '/' + args.dataset + '/origin_trip.txt',
-        'elmo_embedding_path': args.data_path + '/' + args.dataset + '/elmo.preprocessed.pickle',
-        'glove_embedding_path': args.data_path + '/' + args.dataset + '/glove.preprocessed.pickle',
-        'word2id_path': args.data_path + '/' + args.dataset + '/word2id.txt',
-        'word_glove_path': args.data_path + '/' + args.dataset + '/word.glove.pickle',
-        'relation2word_path': args.data_path + '/' + args.dataset + '/relation2word.dict.pickle',
-        'train_label_path': args.data_path + '/' + args.dataset + '/train.label.pickle',
-        'graph_edges_path': args.data_path + '/' + args.dataset + '/edges.pickle',
-        'edges_type_path': args.data_path + '/' + args.dataset + '/edges_type.pickle',
-    }
-
-    args.max_entity_length, args.ent_total = get_entity_len_and_num(args)
-    args.max_rel_length, args.rel_total = get_rel_len_and_num(args)
-
-    if args.use_glove:
-        args.input_dim = get_glove_entity_dim(args)
-    else:
-        args.input_dim = get_elmo_entity_dim(args)
-
-    args.nfeats = 300
-    args.pad_id = 0
-
-    args.model_path = "ConvE" + "-" + args.CN + "_modelpath.pth"
-
-    if torch.cuda.is_available():
-        args.use_cuda = True
-    else:
-        args.use_cuda = False
-
-    args.use_cuda = False
-
-    return args
-
 
 def get_triple_data(triple_file, is_use_cuda):
     fin = open(triple_file, "r", encoding="utf8").readlines()
@@ -201,7 +65,7 @@ if __name__ == '__main__':
         edge_type = edge_type.cuda()
         edge_norm = edge_norm.cuda()
 
-    model_state_file = args.model_path
+    model_state_file = args.data_files['model_path']
 
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=2)
@@ -240,7 +104,7 @@ if __name__ == '__main__':
 
         if (epoch + 1) % args.eval_epoch == 0:
             model.eval()
-            MR, MRR = evaluate(model, args.ent_total, valid_triple, args, entity_embedding, label_graph, edge_index, edge_type, edge_norm)
+            MR, MRR = evaluate(model, valid_triple, args, entity_embedding, label_graph, edge_index, edge_type, edge_norm)
             if MRR > best_MRR or MR < best_MR:
                 count = 0
                 if MRR > best_MRR: best_MRR = MRR
@@ -258,4 +122,4 @@ if __name__ == '__main__':
     checkpoint = torch.load(model_state_file)
     model.eval()
     model.load_state_dict(checkpoint['state_dict'])
-    _, _ = evaluate(model, args.ent_total, test_triple, args, entity_embedding, label_graph, edge_index, edge_type, edge_norm)
+    _, _ = evaluate(model, test_triple, args, entity_embedding, label_graph, edge_index, edge_type, edge_norm)
