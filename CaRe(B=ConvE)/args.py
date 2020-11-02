@@ -88,6 +88,4 @@ def init_args():
     else:
         args.use_cuda = False
 
-    args.use_cuda = False
-
     return args
