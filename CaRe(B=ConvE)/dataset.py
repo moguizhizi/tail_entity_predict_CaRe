@@ -6,7 +6,7 @@
 @file: dataset.py
 @desc: 
 """
-import argparse
+from args import init_args
 import os
 import pickle
 import random
@@ -393,39 +393,10 @@ def get_edges_type(triple_file, edges_file, edages_type_file):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Infused Representations for Cockpit KGs')
+    args = init_args(is_dataset=True)
 
-    ### Model and Dataset choice
-    parser.add_argument('-dataset', dest='dataset', default='Cockpit', choices=['Cockpit'],
-                        help='Dataset Choice')
-
-    ### Data Paths
-    parser.add_argument('-data_path', dest='data_path', default='../Data', help='Data folder')
-    parser.add_argument('-elmo_model_path', dest='elmo_model_path', default='../Elmo/zhs.model/',
-                        help='Elmo model folder')
-    parser.add_argument('-glove_path', dest='glove_path', default='../Glove/wiki.zh.glove.300d.txt',
-                        help='glove file')
-
-    args = parser.parse_args()
-
-    args.data_files = {
-        'dataset_path': args.data_path + '/' + args.dataset + '/dataset.txt',
-        'origin_path': args.data_path + '/' + args.dataset + '/origin.txt',
-        'ent2id_path': args.data_path + '/' + args.dataset + '/ent2id.txt',
-        'rel2id_path': args.data_path + '/' + args.dataset + '/rel2id.txt',
-        'train_trip_path': args.data_path + '/' + args.dataset + '/train_trip.txt',
-        'test_trip_path': args.data_path + '/' + args.dataset + '/test_trip.txt',
-        'valid_trip_path': args.data_path + '/' + args.dataset + '/valid_trip.txt',
-        'origin_trip_path': args.data_path + '/' + args.dataset + '/origin_trip.txt',
-        'elmo_embedding_path': args.data_path + '/' + args.dataset + '/elmo.preprocessed.pickle',
-        'glove_embedding_path': args.data_path + '/' + args.dataset + '/glove.preprocessed.pickle',
-        'word2id_path': args.data_path + '/' + args.dataset + '/word2id.txt',
-        'word_glove_path': args.data_path + '/' + args.dataset + '/word.glove.pickle',
-        'relation2word_path': args.data_path + '/' + args.dataset + '/relation2word.dict.pickle',
-        'train_label_path': args.data_path + '/' + args.dataset + '/train.label.pickle',
-        'graph_edges_path': args.data_path + '/' + args.dataset + '/edges.pickle',
-        'edges_type_path': args.data_path + '/' + args.dataset + '/edges_type.pickle',
-    }
+    for item in vars(args).items():
+        logger.info('%s : %s', item[0], str(item[1]))
 
     data_files = args.data_files
 

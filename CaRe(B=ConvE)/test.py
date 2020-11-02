@@ -127,7 +127,7 @@ def predict(model, predict_trips, args, entity_embedding, label_graph, edge_inde
                 f.write('\n')
 
 if __name__ == '__main__':
-    args = init_args()
+    args = init_args(is_dataset=False)
 
     if args.use_glove:
         pad_entity_embedding = pad_glove_all_entity_embedding(args)
