@@ -18,6 +18,7 @@ from logger import config_logger
 
 logger = config_logger('Model')
 
+
 def get_triple_data(triple_file, is_use_cuda):
     fin = open(triple_file, "r", encoding="utf8").readlines()
     trip_list = []
@@ -36,7 +37,7 @@ def get_triple_data(triple_file, is_use_cuda):
 
 
 if __name__ == '__main__':
-    args = init_args()
+    args = init_args(is_dataset=False)
 
     if args.use_glove:
         pad_entity_embedding = pad_glove_all_entity_embedding(args)
@@ -104,7 +105,8 @@ if __name__ == '__main__':
 
         if (epoch + 1) % args.eval_epoch == 0:
             model.eval()
-            MR, MRR = evaluate(model, valid_triple, args, entity_embedding, label_graph, edge_index, edge_type, edge_norm)
+            MR, MRR = evaluate(model, valid_triple, args, entity_embedding, label_graph, edge_index, edge_type,
+                               edge_norm)
             if MRR > best_MRR or MR < best_MR:
                 count = 0
                 if MRR > best_MRR: best_MRR = MRR

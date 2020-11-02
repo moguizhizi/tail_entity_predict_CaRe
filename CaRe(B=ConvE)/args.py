@@ -13,7 +13,7 @@ import torch
 from utils import get_entity_len_and_num, get_rel_len_and_num, get_glove_entity_dim, get_elmo_entity_dim
 
 
-def init_args():
+def init_args(is_dataset = False):
     parser = argparse.ArgumentParser(description='CaRe: Canonicalization Infused Representations for Open KGs')
 
     ### Model and Dataset choice
@@ -26,6 +26,10 @@ def init_args():
 
     ### Data Paths
     parser.add_argument('-data_path', dest='data_path', default='../Data', help='Data folder')
+    parser.add_argument('-elmo_model_path', dest='elmo_model_path', default='../Elmo/zhs.model/',
+                        help='Elmo model folder')
+    parser.add_argument('-glove_path', dest='glove_path', default='../Glove/wiki.zh.glove.300d.txt',
+                        help='glove file')
 
     #### Hyper-parameters
     parser.add_argument('-num_layers', dest='num_layers', default=1, type=int, help='No. of layers in encoder network')
@@ -71,6 +75,9 @@ def init_args():
         'result_path': args.data_path + '/' + args.dataset + '/Predict' + '/result.txt',
         'model_path': args.data_path + '/' + args.dataset + '/Model' + '/' + args.CN + "_modelpath.pth",
     }
+
+    if is_dataset == True:
+        return args
 
     args.max_entity_length, args.ent_total = get_entity_len_and_num(args)
     args.max_rel_length, args.rel_total = get_rel_len_and_num(args)
