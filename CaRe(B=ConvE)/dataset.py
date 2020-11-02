@@ -17,6 +17,7 @@ from elmoformanylangs import Embedder
 from progressbar import ProgressBar, Percentage, Bar, Timer, ETA
 
 from logger import config_logger
+from utils import get_list_from_file
 
 logger = config_logger('DataSet')
 
@@ -169,27 +170,6 @@ def gen_id_file(origin_file, entity_file, relation_file):
             relation_list.append(relation)
     entity_out.write(str(entity_num) + " " + str(max_entity_length))
     relation_out.write(str(relation_num) + " " + str(max_re_length))
-
-
-def get_entity(file_entity):
-    fin = open(file_entity, "r", encoding="utf8").readlines()
-    entity_list = []
-    for trip in fin[0:]:
-        record = trip.strip().split()
-        entity_list.append(record[0])
-
-    return entity_list[0:(len(entity_list) - 1)]
-
-
-def get_relation(file_relation):
-    fin = open(file_relation, "r", encoding="utf8").readlines()
-    relation_list = []
-    for trip in fin[0:]:
-        record = trip.strip().split()
-        relation_list.append(record[0])
-
-    return relation_list[0:(len(relation_list) - 1)]
-
 
 def gen_triple_file(origin_file, entity_list, relation_list, train_file, test_file, valid_file, origin_triple_file):
     entity_dict = {}
@@ -453,11 +433,12 @@ if __name__ == '__main__':
 
     gen_id_file(data_files['origin_path'], data_files['ent2id_path'], data_files['rel2id_path'])
 
-    entity_list = get_entity(data_files['ent2id_path'])
+    entity_list = get_list_from_file(data_files['ent2id_path'], is_contain_last=False)
     doPreprocessForElmo(entity_list, data_files['elmo_embedding_path'], args.elmo_model_path)
     doPreprocessForGlove(entity_list, data_files['glove_embedding_path'], args.glove_path)
 
-    relation_list = get_relation(data_files['rel2id_path'])
+    relation_list = get_list_from_file(data_files['rel2id_path'], is_contain_last=False)
+
     gen_triple_file(data_files['origin_path'], entity_list, relation_list,
                     data_files['train_trip_path'], data_files['test_trip_path'],
                     data_files['valid_trip_path'], data_files['origin_trip_path'])
