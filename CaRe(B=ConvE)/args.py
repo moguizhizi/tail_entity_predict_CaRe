@@ -19,8 +19,6 @@ def init_args(is_dataset = False):
     ### Model and Dataset choice
     parser.add_argument('-CN', dest='CN', default='RGCN', choices=['Linear', 'GCN', 'LAN', 'RGCN'],
                         help='Choice of Canonical Cluster Encoder Network')
-    parser.add_argument('-GcnNum', dest='GcnNum', default=1, type=int, choices=[1, 2],
-                        help='The number of Gcn Convolution')
     parser.add_argument('-dataset', dest='dataset', default='Cockpit', choices=['Cockpit'],
                         help='Dataset Choice')
 

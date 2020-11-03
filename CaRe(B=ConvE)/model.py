@@ -36,13 +36,7 @@ class ConvEParam(nn.Module):
         if self.args.CN == 'Linear':
             self.cn = LinearEncoder(args)
         elif self.args.CN == 'GCN':
-            if self.args.GcnNum == 1:
-                self.cn = GCNCov1(args.input_dim, args.nfeats, args.entPoolType)
-            elif self.args.GcnNum == 2:
-                self.cn = GcnNet(args.input_dim, args.nfeats, args.entPoolType)
-            else:
-                logger.error("The gcn number is error, value = %s", self.args.GcnNum)
-                exit(0)
+            self.cn = GcnNet(args.input_dim, args.nfeats, args.entPoolType)
         elif self.args.CN == 'LAN':
             self.cn = LAN(args.input_dim, args.nfeats, args.entPoolType)
         elif self.args.CN == 'RGCN':
