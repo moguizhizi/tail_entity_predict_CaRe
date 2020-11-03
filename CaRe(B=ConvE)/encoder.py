@@ -125,42 +125,13 @@ class GCNCov1(MessagePassing):
     def update(self, h_prime, x):
         return h_prime
 
-
-class GCNCov2(MessagePassing):
-    def __init__(self, in_channels, out_channels):
-        super(GCNCov2, self).__init__(aggr='add')
-        self.lin = torch.nn.Linear(in_channels, out_channels)
-
-    def forward(self, x, edge_index):
-        edge_index, _ = remove_self_loops(edge_index)
-        edge_index = add_self_loops(edge_index, num_nodes=x.size(0))
-        x = self.lin(x)
-
-        return self.propagate(edge_index, Shape=(x.size(0), x.size(0)), x=x)
-
-    def message(self, x_j, edge_index, Shape):
-        row, col = edge_index
-
-        deg = degree(row, Shape[0], dtype=x_j.dtype)
-
-        deg_inv_sqrt = deg.pow(-0.5)
-        norm = deg_inv_sqrt[row] * deg_inv_sqrt[col]
-
-        return norm.view(-1, 1) * x_j
-
-    def update(self, h_prime, x):
-        return h_prime
-
-
 class GcnNet(nn.Module):
     def __init__(self, in_channels, out_channels, entPoolType):
         super(GcnNet, self).__init__()
-        self.gcn1 = GCNCov1(in_channels, 300, entPoolType)
-        self.gcn2 = GCNCov2(300, out_channels)
+        self.gcn1 = GCNCov1(in_channels, out_channels, entPoolType)
 
     def forward(self, x, edge_index):
-        h = F.leaky_relu(self.gcn1(x, edge_index))
-        np_embedding = self.gcn2(h, edge_index)
+        np_embedding = self.gcn1(x, edge_index)
         return np_embedding
 
 
