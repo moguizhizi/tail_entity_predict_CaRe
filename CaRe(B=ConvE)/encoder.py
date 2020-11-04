@@ -288,3 +288,107 @@ class RGCNNet(torch.nn.Module):
         x = self.conv1(x, edge_index, edge_type, edge_norm)
 
         return x
+
+class GAT(MessagePassing):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 heads=1,
+                 concat=True,
+                 negative_slope=0.2,
+                 dropout=0,
+                 bias=True):
+        super(GAT, self).__init__('add')
+
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.heads = heads
+        self.concat = concat
+        self.negative_slope = negative_slope
+        self.dropout = dropout
+
+        self.weight = nn.Parameter(torch.Tensor(in_channels,
+                                                heads * out_channels))
+        self.att = nn.Parameter(torch.Tensor(1, heads, 2 * out_channels))
+
+        if bias and concat:
+            self.bias = nn.Parameter(torch.Tensor(heads * out_channels))
+        elif bias and not concat:
+            self.bias = nn.Parameter(torch.Tensor(out_channels))
+        else:
+            self.register_parameter('bias', None)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        nn.init.xavier_normal_(self.weight)
+        nn.init.xavier_normal_(self.att)
+        nn.init.constant_(self.bias, 0)
+
+    def forward(self, x, edge_index):
+        """"""
+
+        edge_index, _ = remove_self_loops(edge_index)
+
+        edge_index = add_self_loops(edge_index, num_nodes=x.size(0))
+
+        x = torch.mm(x, self.weight).view(-1, self.heads, self.out_channels)
+
+        return self.propagate(edge_index, size=(x.size(0), x.size(0)), x=x, num_nodes=x.size(0))
+
+    def message(self, edge_index, x_i, x_j, num_nodes):
+        # Compute attention coefficients.
+
+        alpha = (torch.cat([x_i, x_j], dim=-1) * self.att).sum(dim=-1)
+
+        alpha = F.leaky_relu(alpha, self.negative_slope)
+
+        row, col = edge_index
+
+        # alpha = softmax(alpha, col, num_nodes)
+        alpha = self.custom_softmax(alpha, col, self.heads)
+        # Sample attention coefficients stochastically.
+        if self.training and self.dropout > 0:
+            alpha = F.dropout(alpha, p=self.dropout, training=True)
+
+        return x_j * alpha.view(-1, self.heads, 1)
+
+    def update(self, aggr_out):
+        if self.concat is True:
+            aggr_out = aggr_out.view(-1, self.heads * self.out_channels)
+        else:
+            aggr_out = aggr_out.mean(dim=1)
+
+        if self.bias is not None:
+            aggr_out = aggr_out + self.bias
+        return aggr_out
+
+    def __repr__(self):
+        return '{}({}, {}, heads={})'.format(self.__class__.__name__,
+                                             self.in_channels,
+                                             self.out_channels, self.heads)
+
+    def custom_softmax(self, alpha, col, heads):
+        softmax_metrix = alpha
+        edge_index = {}
+        for i, j in enumerate(col):
+            j = int(j)
+            if j not in edge_index:
+                edge_index[j] = set()
+            edge_index[j].add(i)
+
+        for key, value in edge_index.items():
+            temp = []
+            temp_index = 0
+            temp_index_dict = {}
+            for i in value:
+                temp.append(alpha[i].cpu().detach().numpy().tolist())
+                temp_index_dict[temp_index] = i
+                temp_index = temp_index + 1
+            temp = torch.Tensor(temp)
+            temp = temp.view(-1, heads)
+            temp = torch.softmax(temp, 0)
+            for j in range(len(temp)):
+                softmax_metrix[temp_index_dict[j]] = temp[j]
+
+        return softmax_metrix
