@@ -91,25 +91,14 @@ class LinearEncoder(nn.Module):
         return x
 
 
-class GCNCov1(MessagePassing):
-    def __init__(self, in_channels, out_channels, entPoolType):
-        super(GCNCov1, self).__init__(aggr='add')
+class GCNCov(MessagePassing):
+    def __init__(self, in_channels, out_channels):
+        super(GCNCov, self).__init__(aggr='add')
         self.lin = torch.nn.Linear(in_channels, out_channels)
-        self.entPoolType = entPoolType
 
     def forward(self, x, edge_index):
         edge_index, _ = remove_self_loops(edge_index)
         edge_index = add_self_loops(edge_index, num_nodes=x.size(0))
-        x = self.lin(x)
-
-        if self.entPoolType == 'mean':
-            x = torch.mean(x, dim=1)
-        elif self.entPoolType == 'max':
-            x, _ = torch.max(x, dim=1)
-        else:
-            logger.error("The mode does not support entPoolType %s", self.entPoolType)
-            exit(0)
-
         return self.propagate(edge_index, Shape=(x.size(0), x.size(0)), x=x)
 
     def message(self, x_j, edge_index, Shape):
@@ -125,12 +114,25 @@ class GCNCov1(MessagePassing):
     def update(self, h_prime, x):
         return h_prime
 
+
 class GcnNet(nn.Module):
     def __init__(self, in_channels, out_channels, entPoolType):
         super(GcnNet, self).__init__()
-        self.gcn1 = GCNCov1(in_channels, out_channels, entPoolType)
+        self.gcn1 = GCNCov(in_channels, out_channels)
+        self.lin = torch.nn.Linear(in_channels, 300)
+        self.entPoolType = entPoolType
 
     def forward(self, x, edge_index):
+        x = self.lin(x)
+
+        if self.entPoolType == 'mean':
+            x = torch.mean(x, dim=1)
+        elif self.entPoolType == 'max':
+            x, _ = torch.max(x, dim=1)
+        else:
+            logger.error("The mode does not support entPoolType %s", self.entPoolType)
+            exit(0)
+
         np_embedding = self.gcn1(x, edge_index)
         return np_embedding
 
@@ -289,6 +291,7 @@ class RGCNNet(torch.nn.Module):
 
         return x
 
+
 class GAT(MessagePassing):
     def __init__(self,
                  in_channels,
@@ -392,3 +395,26 @@ class GAT(MessagePassing):
                 softmax_metrix[temp_index_dict[j]] = temp[j]
 
         return softmax_metrix
+
+
+class GATNet(torch.nn.Module):
+    def __init__(self, in_channels, out_channels, entPoolType, heads, dropout):
+        super(GATNet, self).__init__()
+        self.entPoolType = entPoolType
+        self.gatcov = GAT(in_channels, out_channels, heads, dropout=dropout)
+        self.lin = torch.nn.Linear(in_channels, 300)
+
+    def forward(self, x, edge_index):
+        x = self.lin(x)
+
+        if self.entPoolType == 'mean':
+            x = torch.mean(x, dim=1)
+        elif self.entPoolType == 'max':
+            x, _ = torch.max(x, dim=1)
+        else:
+            logger.error("The mode does not support entPoolType %s", self.entPoolType)
+            exit(0)
+
+        x = self.gatcov(x, edge_index)
+
+        return x

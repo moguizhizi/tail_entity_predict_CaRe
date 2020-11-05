@@ -17,7 +17,7 @@ def init_args(is_dataset = False):
     parser = argparse.ArgumentParser(description='CaRe: Canonicalization Infused Representations for Open KGs')
 
     ### Model and Dataset choice
-    parser.add_argument('-CN', dest='CN', default='RGCN', choices=['Linear', 'GCN', 'LAN', 'RGCN'],
+    parser.add_argument('-CN', dest='CN', default='RGCN', choices=['Linear', 'GCN', 'LAN', 'RGCN', 'GAT'],
                         help='Choice of Canonical Cluster Encoder Network')
     parser.add_argument('-dataset', dest='dataset', default='Cockpit', choices=['Cockpit'],
                         help='Dataset Choice')
@@ -31,6 +31,7 @@ def init_args(is_dataset = False):
 
     #### Hyper-parameters
     parser.add_argument('-num_layers', dest='num_layers', default=1, type=int, help='No. of layers in encoder network')
+    parser.add_argument('-nheads', dest='nheads', default=3, type=int, help='multi-head attantion in GAT')
     parser.add_argument('-bidirectional', dest='bidirectional', default=True, type=bool, help='type of encoder network')
     parser.add_argument('-relPoolType', dest='relPoolType', default='last', choices=['last', 'max', 'mean'],
                         help='pooling operation for encoder network')

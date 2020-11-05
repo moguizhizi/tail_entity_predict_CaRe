@@ -19,7 +19,7 @@ import torch.nn.functional as F
 
 torch.backends.cudnn.enabled = False
 
-from encoder import GRUEncoder, LinearEncoder, GcnNet, GCNCov1, LAN, RGCNNet
+from encoder import GRUEncoder, LinearEncoder, GcnNet, LAN, RGCNNet, GATNet
 from logger import config_logger
 
 logger = config_logger('Model')
@@ -37,6 +37,10 @@ class ConvEParam(nn.Module):
             self.cn = LinearEncoder(args)
         elif self.args.CN == 'GCN':
             self.cn = GcnNet(args.input_dim, args.nfeats, args.entPoolType)
+        elif self.args.CN == 'GAT':
+            self.cn = GATNet(args.input_dim, self.args.nfeats // self.args.nheads, args.entPoolType,
+                             heads=self.args.nheads,
+                             dropout=self.args.dropout)
         elif self.args.CN == 'LAN':
             self.cn = LAN(args.input_dim, args.nfeats, args.entPoolType)
         elif self.args.CN == 'RGCN':
