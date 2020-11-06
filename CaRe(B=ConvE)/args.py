@@ -7,6 +7,7 @@
 @desc: 
 """
 import argparse
+import ast
 
 import torch
 
@@ -32,7 +33,7 @@ def init_args(is_dataset = False):
     #### Hyper-parameters
     parser.add_argument('-num_layers', dest='num_layers', default=1, type=int, help='No. of layers in encoder network')
     parser.add_argument('-nheads', dest='nheads', default=3, type=int, help='multi-head attantion in GAT')
-    parser.add_argument('-bidirectional', dest='bidirectional', default=True, type=bool, help='type of encoder network')
+    parser.add_argument('-bidirectional', dest='bidirectional', default=True, type=ast.literval_eval, help='type of encoder network')
     parser.add_argument('-relPoolType', dest='relPoolType', default='last', choices=['last', 'max', 'mean'],
                         help='pooling operation for encoder network')
     parser.add_argument('-entPoolType', dest='entPoolType', default='mean', choices=['max', 'mean'],
@@ -47,7 +48,7 @@ def init_args(is_dataset = False):
     parser.add_argument('-Hits', dest='Hits', default=[10, 30, 50], help='Choice of n in Hits@n')
     parser.add_argument('-early_stop', dest='early_stop', default=10, type=int,
                         help='Stopping training after validation performance stops improving')
-    parser.add_argument('-use_glove', type=bool, default=True, help='Using Glove embedding or Elmo')
+    parser.add_argument('-use_glove', type=ast.literval_eval, default=True, help='Using Glove embedding or Elmo')
     parser.add_argument("-n_bases", type=int, default=4)
     parser.add_argument("-predict_num", type=int, default=10)
 
