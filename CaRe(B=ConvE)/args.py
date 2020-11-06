@@ -47,9 +47,9 @@ def init_args(is_dataset = False):
     parser.add_argument('-Hits', dest='Hits', default=[10, 30, 50], help='Choice of n in Hits@n')
     parser.add_argument('-early_stop', dest='early_stop', default=10, type=int,
                         help='Stopping training after validation performance stops improving')
-    parser.add_argument('--use_glove', type=bool, default=True, help='Using Glove embedding or Elmo')
-    parser.add_argument("--n_bases", type=int, default=4)
-    parser.add_argument("--predict_num", type=int, default=10)
+    parser.add_argument('-use_glove', type=bool, default=True, help='Using Glove embedding or Elmo')
+    parser.add_argument("-n_bases", type=int, default=4)
+    parser.add_argument("-predict_num", type=int, default=10)
 
     args = parser.parse_args()
 
