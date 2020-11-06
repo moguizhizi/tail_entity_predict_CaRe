@@ -56,26 +56,41 @@ MRR和Hit数值越大越好，工业应用重点关注Hit指标
 5.	相关参数说明
 
 CN:实体Embedding模型，默认RGCN，支持'Linear', 'GCN', 'LAN', 'RGCN', 'GAT'
+
 dataset：数据集，默认 'Cockpit'
 
 num_layers：GRU层的数量，默认 1
+
 nheads：多头注意力的数量，默认 3
+
 bidirectional：GRU是单向还是双向， 默认 True
+
 relPoolType：关系embedding的最终获取方式，默认last，支持'last', 'max', 'mean'
+
 entPoolType：实体embedding的初始化方式，默认 mean，支持'max', 'mean'
+
 lr：学习率 默认0.001
+
 batch_size：batch的大小 默认1024
+
 n_epochs：训练集的训练次数，默认 500
+
 eval_epoch：当训练集的训练次数是eval_epoch的倍数时，执行验证集 默认5
+
 Hits：默认[10, 30, 50]
+
 early_stop：早停 默认 10
+
 use_glove：是否用glove初始化字Embedding，默认为Ture。False时表示使用Elmo模型初始化Embedding
+
 n_bases：R-GCN时控制基分解的个数，默认 4
+
 predict_num：推测尾实体时，输出尾实体的数目，默认为10
 
-
 6.	常用命令
+
 1、	执行训练模型
+
 python main.py –CN=RGCN
 
 python main.py –CN=GCN
