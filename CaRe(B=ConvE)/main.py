@@ -119,6 +119,12 @@ if __name__ == '__main__':
                 "Best Valid MRR: {}, Best Valid MR: {}, Best Epoch(MR/MRR): {}".format(best_MRR, best_MR, best_epoch))
             scheduler.step(best_epoch)
 
+    f_parameter = open(args.data_files['parameter_path'], "a+", encoding="utf8")
+    for item in vars(args).items():
+        temp = str(item[0]) + ": " + str(item[1])
+        f_parameter.write(temp)
+        f_parameter.write('\n')
+
     ### Get Embeddings
     logger.info("Test Set Evaluation ---")
     checkpoint = torch.load(model_state_file)

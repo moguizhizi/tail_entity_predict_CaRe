@@ -73,6 +73,7 @@ def init_args(is_dataset = False):
         'predict_path': args.data_path + '/' + args.dataset + '/Predict' + '/predict.txt',
         'result_path': args.data_path + '/' + args.dataset + '/Predict' + '/result.txt',
         'model_path': args.data_path + '/' + args.dataset + '/Model' + '/' + args.CN + "_modelpath.pth",
+        'parameter_path': args.data_path + '/' + args.dataset + '/Model' + '/' + args.CN + "_parameter.txt",
     }
 
     if is_dataset == True:
