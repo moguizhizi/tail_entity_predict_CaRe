@@ -116,6 +116,7 @@ python main.py -CN=RGCN -n_bases=3
 5、	设置GRU模型为单向
 
    python main.py -bidirectional=False
+
 6 采用ELMO模型获取词向量
 
   python main.py -use_glove=False
