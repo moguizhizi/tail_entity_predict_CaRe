@@ -54,8 +54,10 @@ MRR和Hit数值越大越好，工业应用重点关注Hit指标
 第三步 获取结果文件
 
 5.	相关参数说明
+
 CN:实体Embedding模型，默认RGCN，支持'Linear', 'GCN', 'LAN', 'RGCN', 'GAT'
 dataset：数据集，默认 'Cockpit'
+
 num_layers：GRU层的数量，默认 1
 nheads：多头注意力的数量，默认 3
 bidirectional：GRU是单向还是双向， 默认 True
