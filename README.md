@@ -18,6 +18,7 @@ https://github.com/HIT-SCIR/ELMoForManyLangs
 第三步：放置Glove文件
 
 将wiki.zh.glove.300d.txt放置到如下路径
+
 2	调节参数
 第一步：导入数据集
 
@@ -40,6 +41,7 @@ https://github.com/HIT-SCIR/ELMoForManyLangs
 Mean Rank数值越小越好
 
 MRR和Hit数值越大越好，工业应用重点关注Hit指标
+
 3	预测尾实体
 第一步 放置需要预测的文件
 
@@ -50,6 +52,7 @@ MRR和Hit数值越大越好，工业应用重点关注Hit指标
 第二步 执行test.py文件
 注意 如果训练时添加了参数，执行test.py时也必须保持一致的参数，例如python main –CN=GCN，则执行test.py 时 为python test.py –CN=GCN。 可以通过Model下的*_parameter.txt获取
 第三步 获取结果文件
+
 5.	相关参数说明
 CN:实体Embedding模型，默认RGCN，支持'Linear', 'GCN', 'LAN', 'RGCN', 'GAT'
 dataset：数据集，默认 'Cockpit'
@@ -67,6 +70,7 @@ early_stop：早停 默认 10
 use_glove：是否用glove初始化字Embedding，默认为Ture。False时表示使用Elmo模型初始化Embedding
 n_bases：R-GCN时控制基分解的个数，默认 4
 predict_num：推测尾实体时，输出尾实体的数目，默认为10
+
 
 6.	常用命令
 1、	执行训练模型
