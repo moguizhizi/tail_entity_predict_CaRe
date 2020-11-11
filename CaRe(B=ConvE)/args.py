@@ -33,7 +33,7 @@ def init_args(is_dataset = False):
     #### Hyper-parameters
     parser.add_argument('-num_layers', dest='num_layers', default=1, type=int, help='No. of layers in encoder network')
     parser.add_argument('-nheads', dest='nheads', default=3, type=int, help='multi-head attantion in GAT')
-    parser.add_argument('-bidirectional', dest='bidirectional', default=True, type=ast.literval_eval, help='type of encoder network')
+    parser.add_argument('-bidirectional', dest='bidirectional', default=True, type=ast.literal_eval, help='type of encoder network')
     parser.add_argument('-relPoolType', dest='relPoolType', default='last', choices=['last', 'max', 'mean'],
                         help='pooling operation for encoder network')
     parser.add_argument('-entPoolType', dest='entPoolType', default='mean', choices=['max', 'mean'],
@@ -48,7 +48,7 @@ def init_args(is_dataset = False):
     parser.add_argument('-Hits', dest='Hits', default=[10, 30, 50], help='Choice of n in Hits@n')
     parser.add_argument('-early_stop', dest='early_stop', default=10, type=int,
                         help='Stopping training after validation performance stops improving')
-    parser.add_argument('-use_glove', type=ast.literval_eval, default=True, help='Using Glove embedding or Elmo')
+    parser.add_argument('-use_glove', type=ast.literal_eval, default=True, help='Using Glove embedding or Elmo')
     parser.add_argument("-n_bases", type=int, default=4)
     parser.add_argument("-predict_num", type=int, default=10)
 
@@ -71,6 +71,7 @@ def init_args(is_dataset = False):
         'train_label_path': args.data_path + '/' + args.dataset + '/train.label.pickle',
         'graph_edges_path': args.data_path + '/' + args.dataset + '/edges.pickle',
         'edges_type_path': args.data_path + '/' + args.dataset + '/edges_type.pickle',
+        'neighbor_path': args.data_path + '/' + args.dataset + '/neighbor.dict.pickle',
         'predict_path': args.data_path + '/' + args.dataset + '/Predict' + '/predict.txt',
         'result_path': args.data_path + '/' + args.dataset + '/Predict' + '/result.txt',
         'model_path': args.data_path + '/' + args.dataset + '/Model' + '/' + args.CN + "_modelpath.pth",
