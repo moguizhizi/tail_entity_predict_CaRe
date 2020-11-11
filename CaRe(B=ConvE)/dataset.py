@@ -6,7 +6,6 @@
 @file: dataset.py
 @desc: 
 """
-from args import init_args
 import os
 import pickle
 import random
@@ -16,8 +15,9 @@ import unicodedata
 from elmoformanylangs import Embedder
 from progressbar import ProgressBar, Percentage, Bar, Timer, ETA
 
+from args import init_args
 from logger import config_logger
-from utils import get_list_from_file
+from utils import str_to_int_from_dict, get_list_from_file
 
 logger = config_logger('DataSet')
 
@@ -170,6 +170,7 @@ def gen_id_file(origin_file, entity_file, relation_file):
             relation_list.append(relation)
     entity_out.write(str(entity_num) + " " + str(max_entity_length))
     relation_out.write(str(relation_num) + " " + str(max_re_length))
+
 
 def gen_triple_file(origin_file, entity_list, relation_list, train_file, test_file, valid_file, origin_triple_file):
     entity_dict = {}
@@ -392,6 +393,24 @@ def get_edges_type(triple_file, edges_file, edages_type_file):
                 edges_file, edages_type_file)
 
 
+def get_neighbor_node(triple_file, neighbor_dict_file, key_type=None, value_type=None):
+    fin = open(triple_file, "r", encoding="utf8").readlines()
+    neighbor_dict = {}
+    for trip in fin[0:]:
+        temp = trip.strip().split()
+        if temp[0] not in neighbor_dict:
+            neighbor_dict[temp[0]] = list()
+        neighbor_dict[temp[0]].append(temp[2])
+
+    neighbor_dict = str_to_int_from_dict(neighbor_dict, is_key_trans=True, is_value_trans=True, key_type=key_type,
+                                         value_type=value_type)
+
+    with open(neighbor_dict_file, 'wb') as f:
+        pickle.dump(neighbor_dict, f)
+        logger.info('Successfully save neighbor node file %s',
+                    neighbor_dict_file)
+
+
 if __name__ == '__main__':
     args = init_args(is_dataset=True)
 
@@ -423,3 +442,5 @@ if __name__ == '__main__':
     gen_label(data_files['train_trip_path'], data_files['train_label_path'])
 
     get_edges_type(data_files['origin_trip_path'], data_files['graph_edges_path'], data_files['edges_type_path'])
+
+    get_neighbor_node(data_files['train_trip_path'], data_files['neighbor_path'], key_type=None, value_type=list)

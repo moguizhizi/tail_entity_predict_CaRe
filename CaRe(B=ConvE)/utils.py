@@ -250,15 +250,22 @@ def pad_glove_all_entity_embedding(args):
 
     return pad_all_entity
 
-def str_to_int_from_dict(trans_dict, is_key_trans = True, is_value_trans = True):
+def str_to_int_from_dict(trans_dict, is_key_trans = True, is_value_trans = True, key_type = None, value_type = None):
     temp_dict = {}
     for key, value in trans_dict.items():
         temp_key = key
         temp_value = value
         if is_key_trans == True:
-            temp_key = int(key)
+            if key_type == None:
+               temp_key = int(key)
+            else:
+               temp_key = key_type(map(int, key))
+
         if is_value_trans == True:
-            temp_value = int(value)
+            if value_type == None:
+               temp_value = int(value)
+            else:
+               temp_value = value_type(map(int, value))
 
         temp_dict[temp_key] = temp_value
 
