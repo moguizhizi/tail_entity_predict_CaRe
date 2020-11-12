@@ -107,6 +107,8 @@ python main.py –CN=GAT
 
 python main.py –CN =Linear
 
+python main.py -CN=GraphSAGE
+
 2、	GAT中多头注意力
 
 python main.py –CN=GAT –nheads=2
@@ -126,4 +128,10 @@ python main.py -CN=RGCN -n_bases=3
 6 采用ELMO模型获取词向量
 
   python main.py -use_glove=False
+  
+7 设置GraphSAGE中，各阶的采样个数
+
+  python main.py -CN=GraphSAGE -num_neighbors=[5,10]
+  
+  注意：num_neighbors与hidden_dim长度必须保持一致
 
