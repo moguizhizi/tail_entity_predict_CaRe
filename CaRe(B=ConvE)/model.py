@@ -19,19 +19,20 @@ import torch.nn.functional as F
 
 torch.backends.cudnn.enabled = False
 
-from encoder import GRUEncoder, LinearEncoder, GcnNet, LAN, RGCNNet, GATNet
+from encoder import GRUEncoder, LinearEncoder, GcnNet, LAN, RGCNNet, GATNet, GraphSage
 from logger import config_logger
 
 logger = config_logger('Model')
 
 
 class ConvEParam(nn.Module):
-    def __init__(self, args, embed_matrix, rel2words):
+    def __init__(self, args, embed_matrix, rel2words, neighbor_node):
         super(ConvEParam, self).__init__()
         self.args = args
 
         self.rel2words = rel2words
         self.phrase_embed_model = GRUEncoder(embed_matrix, self.args)
+        self.neighbor_node = neighbor_node
 
         if self.args.CN == 'Linear':
             self.cn = LinearEncoder(args)
@@ -45,6 +46,9 @@ class ConvEParam(nn.Module):
             self.cn = LAN(args.input_dim, args.nfeats, args.entPoolType)
         elif self.args.CN == 'RGCN':
             self.cn = RGCNNet(args.input_dim, args.nfeats, args.entPoolType, args.rel_total, args.n_bases)
+        elif self.args.CN == 'GraphSAGE':
+            self.cn = GraphSage(args.input_dim, args.hidden_dim, args.num_neighbors, args.entPoolType,
+                                self.neighbor_node)
         else:
             logger.error("The module does not support so CN type, CN = %s", self.args.CN)
             exit(0)
@@ -64,9 +68,11 @@ class ConvEParam(nn.Module):
         self.register_parameter('b', nn.Parameter(torch.zeros(self.args.ent_total)))
         self.fc = torch.nn.Linear(16128, self.args.nfeats)
 
-    def forward(self, x, edge, edge_type, edge_norm):
+    def forward(self, x, edge, edge_type, edge_norm, src_index):
         if self.args.CN == 'RGCN':
             return self.cn(x, edge, edge_type, edge_norm)
+        elif self.args.CN == 'GraphSAGE':
+            return self.cn(x, src_index)
         else:
             return self.cn(x, edge)
 
@@ -92,11 +98,12 @@ class ConvEParam(nn.Module):
 
         return x
 
-    def get_embed(self, samples, entity_embedding, edge_index, edge_type, edge_norm):
+    def get_embed(self, samples, entity_embedding, edge_index, edge_type, edge_norm, src_index):
 
-        np_embed = self.forward(entity_embedding, edge_index, edge_type, edge_norm)
+        np_embed = self.forward(entity_embedding, edge_index, edge_type, edge_norm, src_index)
 
         sub_embed = np_embed[samples[:, 0]]
+
         r = samples[:, 1]
 
         r_batch, r_len = seq_batch(r.cpu().numpy(), self.args, self.rel2words)
@@ -105,9 +112,9 @@ class ConvEParam(nn.Module):
 
         return sub_embed, rel_embed, np_embed
 
-    def get_loss(self, samples, labels, entity_embedding, edge_index, edge_type, edge_norm):
+    def get_loss(self, samples, labels, entity_embedding, edge_index, edge_type, edge_norm, src_index):
 
-        sub_embed, rel_embed, np_embed = self.get_embed(samples, entity_embedding, edge_index, edge_type, edge_norm)
+        sub_embed, rel_embed, np_embed = self.get_embed(samples, entity_embedding, edge_index, edge_type, edge_norm, src_index)
         scores = self.get_scores(sub_embed, rel_embed, np_embed, self.args.batch_size)
         pred = F.sigmoid(scores)
 

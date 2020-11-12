@@ -76,7 +76,7 @@ def get_rank(scores, clust, Hits, pos_ids):
     return rank, hits
 
 
-def evaluate(model, test_trips, args, entity_embedding, label_graph, edge_index, edge_type, edge_norm):
+def evaluate(model, test_trips, args, entity_embedding, label_graph, edge_index, edge_type, edge_norm, src_index):
     H_Rank = []
     H_inv_Rank = []
     H_Hits = np.zeros((len(args.Hits)))
@@ -100,7 +100,7 @@ def evaluate(model, test_trips, args, entity_embedding, label_graph, edge_index,
 
         samples = torch.cat([ent, r], dim=1)
 
-        ent_embed, r_embed, np_embed = model.get_embed(samples, entity_embedding, edge_index, edge_type, edge_norm)
+        ent_embed, r_embed, np_embed = model.get_embed(samples, entity_embedding, edge_index, edge_type, edge_norm, src_index)
 
         scores = model.get_scores(ent_embed, r_embed, np_embed, ent.shape[0]).cpu().data.numpy()
 
@@ -175,6 +175,21 @@ def get_list_from_file(_file, is_contain_last=True):
     for trip in records:
         record = trip.strip().split()
         conttent_list.append(record[0])
+
+    return conttent_list
+
+def get_list_from_triple_file(triple_file):
+    fin = open(triple_file, "r", encoding="utf8").readlines()
+    conttent_list = []
+    for trip in fin[0:]:
+        record = trip.strip().split()
+        entity_id = int(record[0])
+        if entity_id not in conttent_list:
+            conttent_list.append(entity_id)
+
+        entity_id = int(record[2])
+        if entity_id not in conttent_list:
+            conttent_list.append(entity_id)
 
     return conttent_list
 
@@ -270,6 +285,46 @@ def str_to_int_from_dict(trans_dict, is_key_trans = True, is_value_trans = True,
         temp_dict[temp_key] = temp_value
 
     return temp_dict
+
+
+def sampling(src_nodes, sample_num, neighbor_table):
+    """根据源节点采样指定数量的邻居节点，注意使用的是有放回的采样；
+    某个节点的邻居节点数量少于采样数量时，采样结果出现重复的节点
+
+    Arguments:
+        src_nodes {list, ndarray} -- 源节点列表
+        sample_num {int} -- 需要采样的节点数
+        neighbor_table {dict} -- 节点到其邻居节点的映射表
+
+    Returns:
+        np.ndarray -- 采样结果构成的列表
+    """
+    results = []
+    for sid in src_nodes:
+        # 从节点的邻居中进行有放回地进行采样
+        res = np.random.choice(neighbor_table[sid], size=(sample_num,))
+        results.append(res)
+
+    return np.asarray(results).flatten()
+
+
+def multihop_sampling(src_nodes, sample_nums, neighbor_table):
+    """根据源节点进行多阶采样
+
+    Arguments:
+        src_nodes {list, np.ndarray} -- 源节点id
+        sample_nums {list of int} -- 每一阶需要采样的个数
+        neighbor_table {dict} -- 节点到其邻居节点的映射
+
+    Returns:
+        [list of ndarray] -- 每一阶采样的结果
+    """
+    sampling_result = [src_nodes]
+
+    for k, hopk_num in enumerate(sample_nums):
+        hopk_result = sampling(sampling_result[k], hopk_num, neighbor_table)
+        sampling_result.append(hopk_result)
+    return sampling_result
 
 
 
