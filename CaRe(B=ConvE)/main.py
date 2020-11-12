@@ -49,13 +49,18 @@ if __name__ == '__main__':
 
     rel2words = np.load(args.data_files['relation2word_path'])
     embed_matrix = np.load(args.data_files["word_glove_path"])
+    src_index = np.load(args.data_files['ent_id_path'])
+    src_index = np.sort(src_index)
+
+    neighbor_node = np.load(args.data_files["neighbor_path"])
+
     entity_embedding = torch.Tensor(pad_entity_embedding)
     edge_index = torch.tensor(np.load(args.data_files['graph_edges_path']), dtype=torch.long)
     edge_type = torch.tensor(np.load(args.data_files['edges_type_path']), dtype=torch.long)
     edge_norm = edge_normalization(edge_type, edge_index, args.ent_total, args.rel_total)
     edge_norm = torch.tensor(edge_norm)
 
-    model = ConvEParam(args, embed_matrix, rel2words)
+    model = ConvEParam(args, embed_matrix, rel2words, neighbor_node)
 
     logger.info(model)
 
@@ -95,7 +100,7 @@ if __name__ == '__main__':
             samples, labels = get_next_batch(id_list, label_graph, args, train_triple)
 
             optimizer.zero_grad()
-            loss = model.get_loss(samples, labels, entity_embedding, edge_index, edge_type, edge_norm)
+            loss = model.get_loss(samples, labels, entity_embedding, edge_index, edge_type, edge_norm, src_index)
             loss.backward()
             logger.info("batch {}/{} batches, batch_loss: {}".format(i, n_batches, (loss.data).cpu().numpy()))
             torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_norm)
@@ -106,7 +111,7 @@ if __name__ == '__main__':
         if (epoch + 1) % args.eval_epoch == 0:
             model.eval()
             MR, MRR = evaluate(model, valid_triple, args, entity_embedding, label_graph, edge_index, edge_type,
-                               edge_norm)
+                               edge_norm, src_index)
             if MRR > best_MRR or MR < best_MR:
                 count = 0
                 if MRR > best_MRR: best_MRR = MRR
@@ -130,4 +135,4 @@ if __name__ == '__main__':
     checkpoint = torch.load(model_state_file)
     model.eval()
     model.load_state_dict(checkpoint['state_dict'])
-    _, _ = evaluate(model, test_triple, args, entity_embedding, label_graph, edge_index, edge_type, edge_norm)
+    _, _ = evaluate(model, test_triple, args, entity_embedding, label_graph, edge_index, edge_type, edge_norm, src_index)

@@ -14,11 +14,20 @@ import torch
 from utils import get_entity_len_and_num, get_rel_len_and_num, get_glove_entity_dim, get_elmo_entity_dim
 
 
-def init_args(is_dataset = False):
+def conver_to_list(msg):
+    try:
+        msg = msg.strip('[').strip(']')
+        msg = msg.split(',')
+        return list(map(int, msg))
+    except:
+        raise argparse.ArgumentTypeError(msg)
+
+
+def init_args(is_dataset=False):
     parser = argparse.ArgumentParser(description='CaRe: Canonicalization Infused Representations for Open KGs')
 
     ### Model and Dataset choice
-    parser.add_argument('-CN', dest='CN', default='RGCN', choices=['Linear', 'GCN', 'LAN', 'RGCN', 'GAT'],
+    parser.add_argument('-CN', dest='CN', default='RGCN', choices=['Linear', 'GCN', 'LAN', 'RGCN', 'GAT', 'GraphSAGE'],
                         help='Choice of Canonical Cluster Encoder Network')
     parser.add_argument('-dataset', dest='dataset', default='Cockpit', choices=['Cockpit'],
                         help='Dataset Choice')
@@ -33,7 +42,8 @@ def init_args(is_dataset = False):
     #### Hyper-parameters
     parser.add_argument('-num_layers', dest='num_layers', default=1, type=int, help='No. of layers in encoder network')
     parser.add_argument('-nheads', dest='nheads', default=3, type=int, help='multi-head attantion in GAT')
-    parser.add_argument('-bidirectional', dest='bidirectional', default=True, type=ast.literal_eval, help='type of encoder network')
+    parser.add_argument('-bidirectional', dest='bidirectional', default=True, type=ast.literal_eval,
+                        help='type of encoder network')
     parser.add_argument('-relPoolType', dest='relPoolType', default='last', choices=['last', 'max', 'mean'],
                         help='pooling operation for encoder network')
     parser.add_argument('-entPoolType', dest='entPoolType', default='mean', choices=['max', 'mean'],
@@ -45,14 +55,21 @@ def init_args(is_dataset = False):
     parser.add_argument('-grad_norm', dest='grad_norm', default=1.0, type=float, help='gradient clipping')
     parser.add_argument('-eval_epoch', dest='eval_epoch', default=5, type=int,
                         help='Interval for evaluating on validation dataset')
-    parser.add_argument('-Hits', dest='Hits', default=[10, 30, 50], help='Choice of n in Hits@n')
+    parser.add_argument('-Hits', dest='Hits', type=conver_to_list, default=[10, 30, 50], help='Choice of n in Hits@n')
     parser.add_argument('-early_stop', dest='early_stop', default=10, type=int,
                         help='Stopping training after validation performance stops improving')
     parser.add_argument('-use_glove', type=ast.literal_eval, default=True, help='Using Glove embedding or Elmo')
     parser.add_argument("-n_bases", type=int, default=4)
     parser.add_argument("-predict_num", type=int, default=10)
+    parser.add_argument('-hidden_dim', dest='hidden_dim', type=conver_to_list, default=[300, 300],
+                        help='Number of hidden unit nodes')
+    parser.add_argument('-num_neighbors', dest='num_neighbors', type=conver_to_list, default=[10, 10],
+                        help='Number of neighbor nodes per sampling order')
 
     args = parser.parse_args()
+
+    assert len(args.hidden_dim) == len(args.num_neighbors)
+    assert args.hidden_dim[-1] == 300
 
     args.data_files = {
         'dataset_path': args.data_path + '/' + args.dataset + '/dataset.txt',
@@ -72,6 +89,7 @@ def init_args(is_dataset = False):
         'graph_edges_path': args.data_path + '/' + args.dataset + '/edges.pickle',
         'edges_type_path': args.data_path + '/' + args.dataset + '/edges_type.pickle',
         'neighbor_path': args.data_path + '/' + args.dataset + '/neighbor.dict.pickle',
+        'ent_id_path': args.data_path + '/' + args.dataset + '/ent.id.list.pickle',
         'predict_path': args.data_path + '/' + args.dataset + '/Predict' + '/predict.txt',
         'result_path': args.data_path + '/' + args.dataset + '/Predict' + '/result.txt',
         'model_path': args.data_path + '/' + args.dataset + '/Model' + '/' + args.CN + "_modelpath.pth",

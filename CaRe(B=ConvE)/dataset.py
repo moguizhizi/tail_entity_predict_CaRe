@@ -402,6 +402,10 @@ def get_neighbor_node(triple_file, neighbor_dict_file, key_type=None, value_type
             neighbor_dict[temp[0]] = list()
         neighbor_dict[temp[0]].append(temp[2])
 
+        if temp[2] not in neighbor_dict:
+            neighbor_dict[temp[2]] = list()
+        neighbor_dict[temp[2]].append(temp[0])
+
     neighbor_dict = str_to_int_from_dict(neighbor_dict, is_key_trans=True, is_value_trans=True, key_type=key_type,
                                          value_type=value_type)
 
@@ -409,6 +413,24 @@ def get_neighbor_node(triple_file, neighbor_dict_file, key_type=None, value_type
         pickle.dump(neighbor_dict, f)
         logger.info('Successfully save neighbor node file %s',
                     neighbor_dict_file)
+
+
+def get_ent_id_from_file(entity2id_file, entity_id_file, is_contain_last=True):
+    fin = open(entity2id_file, "r", encoding="utf8").readlines()
+    if is_contain_last != True:
+        records = fin[0:-1]
+    else:
+        records = fin[0:]
+
+    content_list = []
+    for trip in records:
+        record = trip.strip().split()
+        content_list.append(int(record[1]))
+
+    with open(entity_id_file, 'wb') as f:
+        pickle.dump(content_list, f)
+        logger.info('Successfully generate entity id file %s',
+                    entity_id_file)
 
 
 if __name__ == '__main__':
@@ -443,4 +465,6 @@ if __name__ == '__main__':
 
     get_edges_type(data_files['origin_trip_path'], data_files['graph_edges_path'], data_files['edges_type_path'])
 
-    get_neighbor_node(data_files['train_trip_path'], data_files['neighbor_path'], key_type=None, value_type=list)
+    get_neighbor_node(data_files['origin_trip_path'], data_files['neighbor_path'], key_type=None, value_type=list)
+
+    get_ent_id_from_file(data_files['ent2id_path'], data_files['ent_id_path'], is_contain_last=False)

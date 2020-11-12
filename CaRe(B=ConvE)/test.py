@@ -85,7 +85,7 @@ def predict(model, predict_trips, args, entity_embedding, label_graph, edge_inde
 
         samples = torch.cat([ent, r], dim=1)
 
-        ent_embed, r_embed, np_embed = model.get_embed(samples, entity_embedding, edge_index, edge_type, edge_norm)
+        ent_embed, r_embed, np_embed = model.get_embed(samples, entity_embedding, edge_index, edge_type, edge_norm, )
 
         scores = model.get_scores(ent_embed, r_embed, np_embed, ent.shape[0]).cpu().data.numpy()
 
@@ -146,7 +146,7 @@ if __name__ == '__main__':
     edge_norm = torch.tensor(edge_norm)
     label_graph = np.load(args.data_files['train_label_path'])
 
-    model = ConvEParam(args, embed_matrix, rel2words)
+    model = ConvEParam(args, embed_matrix, rel2words, )
 
     logger.info(model)
 
