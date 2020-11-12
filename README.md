@@ -1,6 +1,6 @@
 ![](https://github.com/moguizhizi/tail_entity_predict_CaRe/blob/main/CaRe_Model.jpg)
 
-模型分为两大部分：Base模型和 Embedding模型，Base模型是一个CNN模型，包含一个卷积层，一个全连接层，3个BN层。获取预测的尾实体分数。Embedding模型包含实体Embedding模型和关系Embedding模型。实体Embedding模型主要获取全部实体的Embedding，本模型支持五种获取方式：Linear，LAN，GCN，GAT，R_GCN。Linear是一个全连接层。LAN模型通过获取邻居节点得到中心节点向量。GCN模型包含一层图卷积网络。GAT模型包含一层图注意力网络。R_GCN模型包含一层关系图卷积网络。关系Embedding模型为双向GRU模型。
+模型分为两大部分：Base模型和 Embedding模型，Base模型是一个CNN模型，包含一个卷积层，一个全连接层，3个BN层。获取预测的尾实体分数。Embedding模型包含实体Embedding模型和关系Embedding模型。实体Embedding模型主要获取全部实体的Embedding，本模型支持五种获取方式：Linear，LAN，GCN，GAT，R_GCN，GraphSAGE。Linear是一个全连接层。LAN模型通过获取邻居节点得到中心节点向量。GCN模型包含一层图卷积网络。GAT模型包含一层图注意力网络。R_GCN模型包含一层关系图卷积网络。关系Embedding模型为双向GRU模型。GraphSAGE分为采样和聚合两部分，采样是对各阶进行节点采样，聚合为聚合中心节点的邻居节点
 
 1	安装API包
 第一步：安装软件
